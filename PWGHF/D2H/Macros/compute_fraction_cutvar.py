@@ -110,7 +110,7 @@ def main(config):
             fillstyle=0,
             markerstyle=ROOT.kFullSquare,
         )
-        
+
     output = ROOT.TFile(os.path.join(cfg["output"]["directory"], cfg["output"]["file"]), "recreate")
     n_sets = len(hist_rawy)
     for ipt in range(hist_rawy[0].GetNbinsX()):
