@@ -139,7 +139,7 @@ struct multiplicityCombination {
       weights->SetDirectory(0);
       weightFile->Close();
       for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
-        histos.add<TH2>(("MultVsZVtxReweighted/hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), ("hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), kTH2F, {axisZVtx, axesEstimators[i]});
+        histos.add<TH2>(("MultVsZVtxReweighted/hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), ("hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), kTH2F, {axisZVtx, {500, 0, 5}});
       }
     }
   }
@@ -190,79 +190,40 @@ struct multiplicityCombination {
   {
     float zPV = coll.multPVz(); 
 
-    histos.fill(HIST("MultVsZVtx/hMultFV0AVsZVtx"), zPV, coll.multFV0A());
-    histos.fill(HIST("MultVsZVtx/hMultFT0AVsZVtx"), zPV, coll.multFT0A());
-    histos.fill(HIST("MultVsZVtx/hMultFT0CVsZVtx"), zPV, coll.multFT0C());
-    histos.fill(HIST("MultVsZVtx/hMultFDDAVsZVtx"), zPV, coll.multFDDA());
-    histos.fill(HIST("MultVsZVtx/hMultFDDCVsZVtx"), zPV, coll.multFDDC());
-    histos.fill(HIST("MultVsZVtx/hMultNTPVVsZVtx"), zPV, coll.multNTracksPVeta1());
-    histos.fill(HIST("MultVsZVtx/hMultNTracksGlobalVsZVtx"), zPV, coll.multNTracksGlobal());
+    std::vector<double> multiplicity{coll.multFV0A(), coll.multFT0A(), coll.multFT0C(), coll.multFDDA(), coll.multFDDC(), static_cast<double>(coll.multNTracksPVeta1()), static_cast<double>(coll.multNTracksGlobal())};
+    
+    static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
+      constexpr int index = i.value;
+      histos.fill(HIST("MultVsZVtx/hMult") + HIST(detectorNames[index]) + HIST("VsZVtx"), zPV, multiplicity[index]);
+    });
 
     std::vector<double> weigthsOfCurrentColl(CentralityDetectors::kNDetectors, 1),
-      zEqWeights(CentralityDetectors::kNDetectors, 1),
-      zEqCentrality(CentralityDetectors::kNDetectors, 1),
-      reweightedCentr(CentralityDetectors::kNDetectors, 1);
+      zEqCentrality(multiplicity),
+      reweightedCentr(multiplicity);
 
     if (zEqualize) {
-      for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
-        zEqWeights[i] *= zEq[i]->GetBinContent(zEq[i]->FindBin(zPV));
-      }
-
-      zEqCentrality = {
-        coll.multFV0A() * zEqWeights[CentralityDetectors::FV0A],
-        coll.multFT0A() * zEqWeights[CentralityDetectors::FT0A],
-        coll.multFT0C() * zEqWeights[CentralityDetectors::FT0C],
-        coll.multFDDA() * zEqWeights[CentralityDetectors::FDDA],
-        coll.multFDDC() * zEqWeights[CentralityDetectors::FDDC],
-        coll.multNTracksPVeta1() * zEqWeights[CentralityDetectors::NTracksPV],
-        coll.multNTracksGlobal() * zEqWeights[CentralityDetectors::NTracksGlobal]};
-
       static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
         constexpr int index = i.value;
+        zEqCentrality[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
         histos.fill(HIST("MultVsZVtxZEq/hMult") + HIST(detectorNames[index]) + HIST("zEqualised"), zPV, zEqCentrality[index]);
       });
     }
     
     if (useWeights) {
 
-      for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
-        weigthsOfCurrentColl[i] *= weights->GetBinContent(i+1);
-      }
-      
-      weigthsOfCurrentColl = {
-        coll.multFV0A() > 0 ? weigthsOfCurrentColl[CentralityDetectors::FV0A] : 0,
-        coll.multFT0A() > 0 ? weigthsOfCurrentColl[CentralityDetectors::FT0A] : 0,
-        coll.multFT0C() > 0 ? weigthsOfCurrentColl[CentralityDetectors::FT0C] : 0,
-        coll.multFDDA() > 0 ? weigthsOfCurrentColl[CentralityDetectors::FDDA] : 0,
-        coll.multFDDC() > 0 ? weigthsOfCurrentColl[CentralityDetectors::FDDC] : 0,
-        coll.multNTracksPVeta1() > 0 ? weigthsOfCurrentColl[CentralityDetectors::NTracksPV] : 0,
-        coll.multNTracksGlobal() > 0 ? weigthsOfCurrentColl[CentralityDetectors::NTracksGlobal] : 0};
-
-      reweightedCentr = {
-        coll.multFV0A() * weigthsOfCurrentColl[CentralityDetectors::FV0A],
-        coll.multFT0A() * weigthsOfCurrentColl[CentralityDetectors::FT0A],
-        coll.multFT0C() * weigthsOfCurrentColl[CentralityDetectors::FT0C],
-        coll.multFDDA() * weigthsOfCurrentColl[CentralityDetectors::FDDA],
-        coll.multFDDC() * weigthsOfCurrentColl[CentralityDetectors::FDDC],
-        coll.multNTracksPVeta1() * weigthsOfCurrentColl[CentralityDetectors::NTracksPV],
-        coll.multNTracksGlobal() * weigthsOfCurrentColl[CentralityDetectors::NTracksGlobal]};
-
-      //TODO: add histograms for weights without zeq
-
       static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
         constexpr int index = i.value;
+        weigthsOfCurrentColl[index] = multiplicity[index] > 0 ? weights->GetBinContent(index+1) : 0;
+        reweightedCentr[index] *= weigthsOfCurrentColl[index];
+        if (zEqualize) {
+          reweightedCentr[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
+        }
         histos.fill(HIST("MultVsZVtxReweighted/hMult") + HIST(detectorNames[index]) + HIST("VsZVtxReweighted"), zPV, reweightedCentr[index]);
       });
-
-      if (zEqualize) {
-        for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
-          reweightedCentr[i] = zEqCentrality[i] * weigthsOfCurrentColl[i];
-        }
-      }
+      //TODO: add histograms for weights without zeq
     }
 
-    double combinedMult = zEqCentrality[CentralityDetectors::FV0A] * weigthsOfCurrentColl[CentralityDetectors::FV0A] + zEqCentrality[CentralityDetectors::FT0A] * weigthsOfCurrentColl[CentralityDetectors::FT0A] + zEqCentrality[CentralityDetectors::FT0C] * weigthsOfCurrentColl[CentralityDetectors::FT0C] + zEqCentrality[CentralityDetectors::FDDA] * weigthsOfCurrentColl[CentralityDetectors::FDDA];
-
+    double combinedMult = reweightedCentr[CentralityDetectors::FV0A] + reweightedCentr[CentralityDetectors::FT0A] + reweightedCentr[CentralityDetectors::FT0C] + reweightedCentr[CentralityDetectors::FDDA];
     double totalWeights = weigthsOfCurrentColl[CentralityDetectors::FV0A] + weigthsOfCurrentColl[CentralityDetectors::FT0A] + weigthsOfCurrentColl[CentralityDetectors::FT0C] + weigthsOfCurrentColl[CentralityDetectors::FDDA];
 
     histos.fill(HIST("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV"), coll.multNTracksPVeta1(), combinedMult / totalWeights);
@@ -272,19 +233,17 @@ struct multiplicityCombination {
     totalWeights += weigthsOfCurrentColl[CentralityDetectors::FDDC];
 
     histos.fill(HIST("MultVsNTracksPV/hMultCombinedVsNTPV"), coll.multNTracksPVeta1(), combinedMult / totalWeights);
-    histos.fill(HIST("MultVsNTracksPV/hMultFV0AVsNTPV"), coll.multNTracksPVeta1(), coll.multFV0A());
-    histos.fill(HIST("MultVsNTracksPV/hMultFT0AVsNTPV"), coll.multNTracksPVeta1(), coll.multFT0A());
-    histos.fill(HIST("MultVsNTracksPV/hMultFT0CVsNTPV"), coll.multNTracksPVeta1(), coll.multFT0C());
-    histos.fill(HIST("MultVsNTracksPV/hMultFT0MVsNTPV"), coll.multNTracksPVeta1(), coll.multFT0M());
-    histos.fill(HIST("MultVsNTracksPV/hMultFDDAVsNTPV"), coll.multNTracksPVeta1(), coll.multFDDA());
-    histos.fill(HIST("MultVsNTracksPV/hMultFDDCVsNTPV"), coll.multNTracksPVeta1(), coll.multFDDC());
     histos.fill(HIST("MultsVsGlobalTracks/hMultCombinedVsGlobal"), coll.multNTracksGlobal(), combinedMult / totalWeights);
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFV0AVsGlobal"), coll.multNTracksGlobal(), coll.multFV0A());
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFT0AVsGlobal"), coll.multNTracksGlobal(), coll.multFT0A());
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFT0CVsGlobal"), coll.multNTracksGlobal(), coll.multFT0C());
+    
+    static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
+      constexpr int index = i.value;
+      histos.fill(HIST("MultVsNTracksPV/hMult") + HIST(detectorNames[index]) + HIST("VsNTPV"), coll.multNTracksPVeta1(), multiplicity[index]);
+      histos.fill(HIST("MultsVsGlobalTracks/hMult") + HIST(detectorNames[index]) + HIST("VsGlobal"), coll.multNTracksGlobal(), multiplicity[index]);
+    });
+
+    histos.fill(HIST("MultVsNTracksPV/hMultFT0MVsNTPV"), coll.multNTracksPVeta1(), coll.multFT0M());
     histos.fill(HIST("MultsVsGlobalTracks/hMultFT0MVsGlobal"), coll.multNTracksGlobal(), coll.multFT0M());
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFDDAVsGlobal"), coll.multNTracksGlobal(), coll.multFDDA());
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFDDCVsGlobal"), coll.multNTracksGlobal(), coll.multFDDC());
+    
   }
  PROCESS_SWITCH(multiplicityCombination, process, "main process function", true);
 
