@@ -21,6 +21,7 @@
 #include "Common/DataModel/Multiplicity.h"
 #include "Common/DataModel/Centrality.h"
 #include "Common/DataModel/EventSelection.h"
+#include "Common/Tools/Multiplicity/multCalibrator.h"
 #include "Framework/O2DatabasePDGPlugin.h"
 #include "Framework/StaticFor.h"
 #include "TH1F.h"
@@ -34,6 +35,7 @@ enum CentralityDetectors {
   FV0A,
   FT0A,
   FT0C,
+  FT0M,
   FDDA,
   FDDC,
   NTracksPV,
@@ -65,7 +67,7 @@ struct multiplicityCombination {
 
   std::array<TH1F*, CentralityDetectors::kNDetectors> zEq;
   TH1F* weights;
-  static constexpr std::array<std::string, CentralityDetectors::kNDetectors> detectorNames = {"FV0A", "FT0A", "FT0C", "FDDA", "FDDC", "NTPV", "NTracksGlobal"};
+  static constexpr std::array<std::string, CentralityDetectors::kNDetectors> detectorNames = {"FV0A", "FT0A", "FT0C", "FT0M", "FDDA", "FDDC", "NTPV", "NTracksGlobal"};
 
   void init(InitContext&)
   {
@@ -81,18 +83,17 @@ struct multiplicityCombination {
     AxisSpec axisMultCombined = {binsMultCombined, "Combined multiplicity"};
     AxisSpec axisZVtx = {binsZVtx, "z_{vtx} [cm]"};
 
-    std::array<AxisSpec, CentralityDetectors::kNDetectors> axesEstimators = {axisMultFV0A, axisMultFT0A, axisMultFT0C, axisMultFDDA, axisMultFDDC, axisMultNTPV, axisMultNTracksGlobal};
+    std::array<AxisSpec, CentralityDetectors::kNDetectors> axesEstimators = {axisMultFV0A, axisMultFT0A, axisMultFT0C, axisMultFT0M, axisMultFDDA, axisMultFDDC, axisMultNTPV, axisMultNTracksGlobal};
 
     for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
       histos.add<TH2>(("MultVsZVtx/hMult" + detectorNames[i] + "VsZVtx").c_str(), ("hMult" + detectorNames[i] + "VsZVtx").c_str(), kTH2F, {axisZVtx, axesEstimators[i]});
+      histos.add<TH1>(("MultDistributions/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH1F, {axesEstimators[i]});
       histos.add<TH2>(("MultVsNTracksPV/hMult" + detectorNames[i] + "VsNTPV").c_str(), ("hMult" + detectorNames[i] + "VsNTPV").c_str(), kTH2F, {axisMultNTPV, axesEstimators[i]});
       histos.add<TH2>(("MultsVsGlobalTracks/hMult" + detectorNames[i] + "VsGlobal").c_str(), ("hMult" + detectorNames[i] + "VsGlobal").c_str(), kTH2F, {axisMultNTracksGlobal, axesEstimators[i]});
     }
 
-    histos.add<TH2>("MultVsNTracksPV/hMultFT0MVsNTPV", "hMultFT0MVsNTPV", kTH2D, {axisMultNTPV, axisMultFT0M});
     histos.add<TH2>("MultVsNTracksPV/hMultCombinedVsNTPV", "hMultCombinedVsNTPV", kTH2D, {axisMultNTPV, axisMultCombined});
     histos.add<TH2>("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV", "hMultCombinedVsNTPV", kTH2D, {axisMultNTPV, axisMultCombined});
-    histos.add<TH2>("MultsVsGlobalTracks/hMultFT0MVsGlobal", "hMultFT0MVsGlobal", kTH2D, {axisMultNTracksGlobal, axisMultFT0M});
     histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedVsGlobal", "hMultCombinedVsGlobal", kTH2D, {axisMultNTracksGlobal, axisMultCombined});
     histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedNoFDDCVsGlobal", "hMultCombinedVsGlobal", kTH2D, {axisMultNTracksGlobal, axisMultCombined});
 
@@ -110,7 +111,8 @@ struct multiplicityCombination {
         zEqFile->Close();
 
 
-        histos.add<TH1>(("ZEqWeights/ZEqWeights" + detectorNames[i]).c_str(), ("ZEqWeights" + detectorNames[i]).c_str(), kTH1F, {axisZVtx});
+        histos.add<TH1>(("MultDistributionsZEq/hMult"  + detectorNames[i]).c_str(), ("hMult"+ detectorNames[i]).c_str(), kTH1F, {axesEstimators[i]});
+        histos.add<TH1>(("ZEqWeights/ZEqWeights" + detectorNames[i]).c_str(), ("ZEqWeights" + detectorNames[i]).c_str(), kTH1F, {{500, 0, 5}});
         histos.add<TH2>(("MultVsZVtxZEq/hMult" + detectorNames[i] + "zEqualised").c_str(), ("hMult" + detectorNames[i] + "zEqualised").c_str(), kTH2F, {axisZVtx, {500, 0, 5}});
 
       }
@@ -140,6 +142,7 @@ struct multiplicityCombination {
       weightFile->Close();
       for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
         histos.add<TH2>(("MultVsZVtxReweighted/hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), ("hMult" + detectorNames[i] + "VsZVtxReweighted").c_str(), kTH2F, {axisZVtx, {500, 0, 5}});
+        histos.add<TH1>(("MultDistributionsReweighted/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH1F, {{500, 0, 5}});
       }
     }
   }
@@ -190,11 +193,12 @@ struct multiplicityCombination {
   {
     float zPV = coll.multPVz(); 
 
-    std::vector<double> multiplicity{coll.multFV0A(), coll.multFT0A(), coll.multFT0C(), coll.multFDDA(), coll.multFDDC(), static_cast<double>(coll.multNTracksPVeta1()), static_cast<double>(coll.multNTracksGlobal())};
+    std::vector<double> multiplicity{coll.multFV0A(), coll.multFT0A(), coll.multFT0C(), coll.multFT0M(), coll.multFDDA(), coll.multFDDC(), static_cast<double>(coll.multNTracksPVeta1()), static_cast<double>(coll.multNTracksGlobal())};
     
     static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
       constexpr int index = i.value;
       histos.fill(HIST("MultVsZVtx/hMult") + HIST(detectorNames[index]) + HIST("VsZVtx"), zPV, multiplicity[index]);
+      histos.fill(HIST("MultDistributions/hMult") + HIST(detectorNames[index]), multiplicity[index]);
     });
 
     std::vector<double> weigthsOfCurrentColl(CentralityDetectors::kNDetectors, 1),
@@ -206,6 +210,7 @@ struct multiplicityCombination {
         constexpr int index = i.value;
         zEqCentrality[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
         histos.fill(HIST("MultVsZVtxZEq/hMult") + HIST(detectorNames[index]) + HIST("zEqualised"), zPV, zEqCentrality[index]);
+        histos.fill(HIST("MultDistributionsZEq/hMult") + HIST(detectorNames[index]), zEqCentrality[index]);
       });
     }
     
@@ -219,6 +224,7 @@ struct multiplicityCombination {
           reweightedCentr[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
         }
         histos.fill(HIST("MultVsZVtxReweighted/hMult") + HIST(detectorNames[index]) + HIST("VsZVtxReweighted"), zPV, reweightedCentr[index]);
+        histos.fill(HIST("MultDistributionsReweighted/hMult") + HIST(detectorNames[index]), reweightedCentr[index]);
       });
       //TODO: add histograms for weights without zeq
     }
@@ -241,9 +247,6 @@ struct multiplicityCombination {
       histos.fill(HIST("MultsVsGlobalTracks/hMult") + HIST(detectorNames[index]) + HIST("VsGlobal"), coll.multNTracksGlobal(), multiplicity[index]);
     });
 
-    histos.fill(HIST("MultVsNTracksPV/hMultFT0MVsNTPV"), coll.multNTracksPVeta1(), coll.multFT0M());
-    histos.fill(HIST("MultsVsGlobalTracks/hMultFT0MVsGlobal"), coll.multNTracksGlobal(), coll.multFT0M());
-    
   }
  PROCESS_SWITCH(multiplicityCombination, process, "main process function", true);
 
