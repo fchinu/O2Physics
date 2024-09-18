@@ -69,7 +69,7 @@ struct multiplicityCombination {
 
   using JoinedMults = soa::Join<aod::FV0Mults, aod::FT0Mults, aod::FDDMults, aod::MultsGlobal, aod::PVMults, aod::MultsExtra>;
 
-  std::array<TH1F*, CentralityDetectors::kNDetectors> zEq;
+  std::array<TH1F*, CentralityDetectors::kNDetectors> zEqWeightsVsZvtx;
   std::array<TH1F*, CentralityDetectors::kNDetectors + 1> hCalibrations; // +1 for combined
   std::array<std::array<std::shared_ptr<TH2>, CentralityDetectors::kNDetectors>, CentralityDetectors::kNDetectors> hCorrelations;
   TH1F* weights;
@@ -95,14 +95,14 @@ struct multiplicityCombination {
     for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
       histos.add<TH2>(("MultVsZVtx/hMult" + detectorNames[i] + "VsZVtx").c_str(), ("hMult" + detectorNames[i] + "VsZVtx").c_str(), kTH2F, {axisZVtx, axesEstimators[i]});
       histos.add<TH1>(("MultDistributions/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH1F, {axesEstimators[i]});
-      histos.add<TH2>(("MultVsNTracksPV/hMult" + detectorNames[i] + "VsNTPV").c_str(), ("hMult" + detectorNames[i] + "VsNTPV").c_str(), kTH2F, {axisMultNTPV, binsMultZEq});
-      histos.add<TH2>(("MultsVsGlobalTracks/hMult" + detectorNames[i] + "VsGlobal").c_str(), ("hMult" + detectorNames[i] + "VsGlobal").c_str(), kTH2F, {axisMultNTracksGlobal, binsMultZEq});
+      histos.add<TH2>(("MultVsNTracksPV/hMult" + detectorNames[i] + "VsNTPV").c_str(), ("hMult" + detectorNames[i] + "VsNTPV").c_str(), kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {binsMultZEq, (detectorNames[i]+" multiplicity").c_str()}});
+      histos.add<TH2>(("MultsVsGlobalTracks/hMult" + detectorNames[i] + "VsGlobal").c_str(), ("hMult" + detectorNames[i] + "VsGlobal").c_str(), kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {binsMultZEq, (detectorNames[i]+" multiplicity").c_str()}});
     }
 
-    histos.add<TH2>("MultVsNTracksPV/hMultCombinedVsNTPV", "hMultCombinedVsNTPV", kTH2D, {axisMultNTPV, axisMultCombined});
-    histos.add<TH2>("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV", "hMultCombinedVsNTPV", kTH2D, {axisMultNTPV, axisMultCombined});
-    histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedVsGlobal", "hMultCombinedVsGlobal", kTH2D, {axisMultNTracksGlobal, axisMultCombined});
-    histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedNoFDDCVsGlobal", "hMultCombinedVsGlobal", kTH2D, {axisMultNTracksGlobal, axisMultCombined});
+    histos.add<TH2>("MultVsNTracksPV/hMultCombinedVsNTPV", "hMultCombinedVsNTPV", kTH2D, {{binsMultZEq, "N_{tracks}^{PV}"}, axisMultCombined});
+    histos.add<TH2>("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV", "hMultCombinedVsNTPV", kTH2D, {{binsMultZEq, "N_{tracks}^{PV}"}, axisMultCombined});
+    histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedVsGlobal", "hMultCombinedVsGlobal", kTH2D, {{binsMultZEq, "N_{tracks}^{global}"}, axisMultCombined});
+    histos.add<TH2>("MultsVsGlobalTracks/hMultCombinedNoFDDCVsGlobal", "hMultCombinedVsGlobal", kTH2D, {{binsMultZEq, "N_{tracks}^{global}"}, axisMultCombined});
 
     if (zEqualize) {
       for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
@@ -110,11 +110,11 @@ struct multiplicityCombination {
         if (!zEqFile) {
           LOGP(fatal, "Could not open file {}", pathZEq.value.c_str());
         }
-        zEq[i] = (TH1F*)(zEqFile->Get(("hWeights" + detectorNames[i]).c_str()));
-        if (!zEq[i]) {
+        zEqWeightsVsZvtx[i] = (TH1F*)(zEqFile->Get(("hWeights" + detectorNames[i]).c_str()));
+        if (!zEqWeightsVsZvtx[i]) {
           LOGP(fatal, "Could not find histogram {} in file {}", ("hWeights" + detectorNames[i]).c_str(), pathZEq.value.c_str());
         }
-        zEq[i]->SetDirectory(0);
+        zEqWeightsVsZvtx[i]->SetDirectory(0);
         zEqFile->Close();
 
         histos.add<TH1>(("MultDistributions/zEq/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH1F, {binsMultZEq});
@@ -128,10 +128,10 @@ struct multiplicityCombination {
 
       static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
         constexpr int index = i.value;
-        for (int iZvtx = 1; iZvtx <= zEq[index]->GetNbinsX(); iZvtx++) {
-          float zPV = zEq[index]->GetBinCenter(iZvtx);
+        for (int iZvtx = 1; iZvtx <= zEqWeightsVsZvtx[index]->GetNbinsX(); iZvtx++) {
+          float zPV = zEqWeightsVsZvtx[index]->GetBinCenter(iZvtx);
 
-          histos.fill(HIST("ZEqWeights/ZEqWeights") + HIST(detectorNames[index]), zPV, zEq[index]->GetBinContent(iZvtx));
+          histos.fill(HIST("ZEqWeights/ZEqWeights") + HIST(detectorNames[index]), zPV, zEqWeightsVsZvtx[index]->GetBinContent(iZvtx));
         }
       });
     }
@@ -165,58 +165,127 @@ struct multiplicityCombination {
         if (!hCalibrations[i]) {
           LOGP(fatal, "Could not find histogram {} in file {}", ("hCalib" + detectorNames[i]).c_str(), pathCalibration.value.c_str());
         }
-        histos.add<TH2>(("MultDistributionsCalibratedVsNTracksPV/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH2F, {axisMultNTPV, {100, 0, 100}});
-        histos.add<TH2>(("MultDistributionsCalibratedVsGlobal/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH2F, {axisMultNTracksGlobal, {100, 0, 100}});
+        histos.add<TH2>(("MultDistributionsCalibratedVsNTracksPV/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100}});
+        histos.add<TH2>(("MultDistributionsCalibratedVsGlobal/hMult" + detectorNames[i]).c_str(), ("hMult" + detectorNames[i]).c_str(), kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100}});
       }
       hCalibrations[CentralityDetectors::kNDetectors] = (TH1F*)(calibFile->Get("hCalibCombined"));
       calibFile->Close();
-      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombined", "hMultCombined", kTH2F, {axisMultNTPV, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {axisMultNTPV, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombined", "hMultCombined", kTH2F, {axisMultNTracksGlobal, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {axisMultNTracksGlobal, {100, 0, 100}});
+      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100}});
+      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100}});
+      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100}});
+      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100}});
     }
   }
 
-  void doZequalisation(JoinedMults const& collisions)
+
+  /**
+   * @brief Calculates the equalized multiplicities for each detector in the collision.
+   * 
+   * This function takes a collision of type T and calculates the equalized multiplicities
+   * for each detector in the collision. The equalized multiplicities are then used to fill
+   * various histograms for analysis purposes.
+   * 
+   * @tparam T The type of the collision.
+   * @param coll The collision used to retrieve the midrapidity multiplicity.
+   * @param zEqMultiplicity The vector to store the equalized multiplicities.
+   */
+  template <typename T>
+  void getZEqMultiplicity(const T& coll, std::vector<double>& zEqMultiplicity)
   {
-
-    for (auto coll : collisions) {
-      float zPV = coll.multPVz();
-      histos.fill(HIST("MultVsZVtx/hMultFV0AVsZVtx"), zPV, coll.multFV0A());
-      histos.fill(HIST("MultVsZVtx/hMultFT0AVsZVtx"), zPV, coll.multFT0A());
-      histos.fill(HIST("MultVsZVtx/hMultFT0CVsZVtx"), zPV, coll.multFT0C());
-      histos.fill(HIST("MultVsZVtx/hMultFDDAVsZVtx"), zPV, coll.multFDDA());
-      histos.fill(HIST("MultVsZVtx/hMultFDDCVsZVtx"), zPV, coll.multFDDC());
-      histos.fill(HIST("MultVsZVtx/hMultNTPVVsZVtx"), zPV, coll.multNTracksPVeta1());
-      histos.fill(HIST("MultVsZVtx/hMultNTracksGlobalVsZVtx"), zPV, coll.multNTracksGlobal());
-    }
-
+    float zPV = coll.multPVz();
     static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
       constexpr int index = i.value;
-      std::shared_ptr<TH2> hMult = histos.get<TH2>(HIST("MultVsZVtx/hMult") + HIST(detectorNames[index]) + HIST("VsZVtx"));
-      for (int iZvtx = 1; iZvtx <= hMult->GetNbinsX(); iZvtx++) {
-        std::shared_ptr<TH1> hWeight = histos.get<TH1>(HIST("ZEqWeights/ZEqWeights") + HIST(detectorNames[index]));
-        std::shared_ptr<TH1> hProjection(hMult->ProjectionY(("hWeightsZEq" + detectorNames[index]).c_str(), iZvtx, iZvtx));
-        hProjection->GetXaxis()->SetRange(2, hProjection->GetNbinsX()); // exclude the bin with 0 multiplicity
-        if (hProjection->GetEntries() == 0) {
-          hWeight->SetBinContent(iZvtx, 0);
-        } else {
-          hProjection->ComputeIntegral();
-          double nq = 1;
-          double quantiles[1]{0.99};
-          double mult99perc[1]{0};
-          int nQuantiles = hProjection->GetQuantiles(nq, mult99perc, quantiles);
-          if (mult99perc[0] == 0) {
-            LOGP(warning, "Could not find 99th percentile for detector {}", detectorNames[index]);
-          }
-          if (nQuantiles != nq) {
-            hWeight->SetBinContent(iZvtx, 0);
-          } else {
-            hWeight->SetBinContent(iZvtx, 1 / mult99perc[0]);
-          }
-        }
-      }
+      zEqMultiplicity[index] *= zEqWeightsVsZvtx[index]->GetBinContent(zEqWeightsVsZvtx[index]->FindBin(zPV));
+      // Firstly fill the histogram with the equalized multiplicities
+      histos.fill(HIST("MultVsZVtxZEq/hMult") + HIST(detectorNames[index]) + HIST("zEqualised"), zPV, zEqMultiplicity[index]);
+      histos.fill(HIST("MultDistributions/zEq/hMult") + HIST(detectorNames[index]), zEqMultiplicity[index]);
+
+      // Fill the histograms for the equalized multiplicities vs the number of tracks
+      histos.fill(HIST("MultVsNTracksPV/hMult") + HIST(detectorNames[index]) + HIST("VsNTPV"), zEqMultiplicity[CentralityDetectors::NTracksPV], zEqMultiplicity[index]);
+      histos.fill(HIST("MultsVsGlobalTracks/hMult") + HIST(detectorNames[index]) + HIST("VsGlobal"), zEqMultiplicity[CentralityDetectors::NTracksGlobal], zEqMultiplicity[index]);
     });
+
+    // Fill the correlation histograms for the equalized multiplicities once all the detectors have been processed
+    for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
+      for (int j = 0; j < CentralityDetectors::kNDetectors; j++) {
+        hCorrelations[i][j]->Fill(zEqMultiplicity[i], zEqMultiplicity[j]);
+      }
+    }
+  }
+
+  /**
+   * @brief Calculates the reweighted multiplicity for a given collision.
+   * 
+   * This function takes a collision `coll` and calculates the reweighted multiplicity
+   * based on the values in the `multiplicity` vector and the weights stored in the `weightsOfCurrentColl` vector.
+   * The reweighted multiplicity is stored in the `multiplicity` vector.
+   * 
+   * @tparam T The type of the collision.
+   * @param coll The collision used to retrieve the midrapidity multiplicity.
+   * @param multiplicity The vector containing the multiplicity values.
+   * @param weigthsOfCurrentColl The vector containing the weights of the current collision.
+   */
+  template <typename T>
+  void getReweightedMulitplicity(const T& coll, std::vector<double>& multiplicity, std::vector<double>& weigthsOfCurrentColl)
+  {
+    float zPV = coll.multPVz();
+    static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
+      constexpr int index = i.value;
+      weigthsOfCurrentColl[index] = multiplicity[index] > 0 ? weights->GetBinContent(index + 1) : 0;
+      multiplicity[index] *= weigthsOfCurrentColl[index];
+      histos.fill(HIST("MultVsZVtxReweighted/hMult") + HIST(detectorNames[index]) + HIST("VsZVtxReweighted"), zPV, multiplicity[index]);
+      histos.fill(HIST("MultDistributions/Reweighted/hMult") + HIST(detectorNames[index]), multiplicity[index]);
+    });
+  }
+
+  /**
+   * @brief Computes the combined multiplicity based on the given collision, multiplicities, and weights.
+   * 
+   * This function calculates the combined multiplicity by summing the multiplicities from different centrality detectors
+   * and dividing it by the total weights. It also supports producing distributions with percentiles if specified.
+   * 
+   * @tparam T The type of the collision.
+   * @param coll The collision used to retrieve the midrapidity multiplicity.
+   * @param multiplicity The vector of multiplicities from different centrality detectors.
+   * @param weights The vector of weights corresponding to the multiplicities.
+   * @param produceDistributionsWithPercentiles Flag indicating whether to produce distributions with percentiles.
+   */
+  template <typename T>
+  void computeCombinedMultiplicity(const T& coll, const std::vector<double>& multiplicity, const std::vector<double>& zEqMultiplicity, const std::vector<double>& weights, bool produceDistributionsWithPercentiles)
+  {
+    // Firstly calculate the combined multiplicity without FDDC
+    double summedMult = multiplicity[CentralityDetectors::FV0A] + multiplicity[CentralityDetectors::FT0A] + multiplicity[CentralityDetectors::FT0C] + multiplicity[CentralityDetectors::FDDA];
+    double totalWeights = weights[CentralityDetectors::FV0A] + weights[CentralityDetectors::FT0A] + weights[CentralityDetectors::FT0C] + weights[CentralityDetectors::FDDA];
+    double combinedMult = summedMult / totalWeights;
+
+    if (summedMult > 0) {
+
+      if (produceDistributionsWithPercentiles) {
+        double combinedMultPercentile = hCalibrations[CentralityDetectors::kNDetectors]->GetBinContent(hCalibrations[CentralityDetectors::kNDetectors]->FindBin(combinedMult));
+        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC"), zEqMultiplicity[CentralityDetectors::NTracksPV], combinedMultPercentile);
+        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC"), zEqMultiplicity[CentralityDetectors::NTracksGlobal], combinedMultPercentile);
+      }
+
+      histos.fill(HIST("MultDistributions/Reweighted/hMultCombinedNoFDDC"), combinedMult);
+      histos.fill(HIST("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV"), zEqMultiplicity[CentralityDetectors::NTracksPV], combinedMult);
+      histos.fill(HIST("MultsVsGlobalTracks/hMultCombinedNoFDDCVsGlobal"), zEqMultiplicity[CentralityDetectors::NTracksGlobal], combinedMult);
+    }
+
+    // Now calculate the combined multiplicity with FDDC
+    summedMult += multiplicity[CentralityDetectors::FDDC] * weights[CentralityDetectors::FDDC];
+    totalWeights += weights[CentralityDetectors::FDDC];
+    combinedMult = summedMult / totalWeights;
+
+    if (summedMult > 0) {
+      if (produceDistributionsWithPercentiles) {
+      double combinedMultPercentile = hCalibrations[CentralityDetectors::kNDetectors]->GetBinContent(hCalibrations[CentralityDetectors::kNDetectors]->FindBin(combinedMult));
+        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMultCombined"), zEqMultiplicity[CentralityDetectors::NTracksPV], combinedMultPercentile);
+        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMultCombined"), zEqMultiplicity[CentralityDetectors::NTracksGlobal], combinedMultPercentile);
+      }
+      histos.fill(HIST("MultDistributions/Reweighted/hMultCombined"), combinedMult);
+      histos.fill(HIST("MultVsNTracksPV/hMultCombinedVsNTPV"), zEqMultiplicity[CentralityDetectors::NTracksPV], combinedMult);
+      histos.fill(HIST("MultsVsGlobalTracks/hMultCombinedVsGlobal"), zEqMultiplicity[CentralityDetectors::NTracksGlobal], combinedMult);
+    }
   }
 
   void process(JoinedMults::iterator const& coll)
@@ -231,92 +300,29 @@ struct multiplicityCombination {
       histos.fill(HIST("MultDistributions/hMult") + HIST(detectorNames[index]), multiplicity[index]);
     });
 
-    std::vector<double> weigthsOfCurrentColl(CentralityDetectors::kNDetectors, 1),
-      zEqCentrality(multiplicity),
-      reweightedCentr(multiplicity);
+    std::vector<double> weigthsOfCurrentColl(CentralityDetectors::kNDetectors, 1);
+    std::vector<double> zEqMultiplicity(multiplicity);
 
     if (zEqualize) {
-      static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
-        constexpr int index = i.value;
-        zEqCentrality[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
-        histos.fill(HIST("MultVsZVtxZEq/hMult") + HIST(detectorNames[index]) + HIST("zEqualised"), zPV, zEqCentrality[index]);
-        histos.fill(HIST("MultDistributions/zEq/hMult") + HIST(detectorNames[index]), zEqCentrality[index]);
-      });
+      getZEqMultiplicity(coll, zEqMultiplicity);
     }
 
-    if (useWeights) {
+    std::vector<double> reweightedMultiplicity(zEqMultiplicity);
 
-      static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
-        constexpr int index = i.value;
-        weigthsOfCurrentColl[index] = multiplicity[index] > 0 ? weights->GetBinContent(index + 1) : 0;
-        reweightedCentr[index] *= weigthsOfCurrentColl[index];
-        if (zEqualize) {
-          reweightedCentr[index] *= zEq[index]->GetBinContent(zEq[index]->FindBin(zPV));
-        }
-        histos.fill(HIST("MultVsZVtxReweighted/hMult") + HIST(detectorNames[index]) + HIST("VsZVtxReweighted"), zPV, reweightedCentr[index]);
-        histos.fill(HIST("MultDistributions/Reweighted/hMult") + HIST(detectorNames[index]), reweightedCentr[index]);
-        for (int j = 0; j < CentralityDetectors::kNDetectors; j++) {
-          hCorrelations[i][j]->Fill(zEqCentrality[index], zEqCentrality[j]);
-        }
-        //static_for<i + 1, CentralityDetectors::kNDetectors - 1>([&, index](auto j) {
-        //  constexpr int jndex = j.value;
-        //  histos.fill(HIST("MultDistributions/Reweighted/hCorr") + HIST(detectorNames[index]) + HIST("_") + HIST(detectorNames[jndex]), multiplicity[index], multiplicity[jndex]);
-        //});
-      });
-      //TODO: add histograms for weights without zeq
+    if (useWeights) {
+      getReweightedMulitplicity(coll, reweightedMultiplicity, weigthsOfCurrentColl);
     }
 
     if (produceDistributionsWithPercentiles) {
       static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
         constexpr int index = i.value;
-        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMult") + HIST(detectorNames[index]), coll.multNTracksPVeta1(), hCalibrations[index]->GetBinContent(hCalibrations[index]->FindBin(zEqCentrality[index])));
-        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMult") + HIST(detectorNames[index]), coll.multNTracksGlobal(), hCalibrations[index]->GetBinContent(hCalibrations[index]->FindBin(zEqCentrality[index])));
+        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMult") + HIST(detectorNames[index]), zEqMultiplicity[CentralityDetectors::NTracksPV], hCalibrations[index]->GetBinContent(hCalibrations[index]->FindBin(zEqMultiplicity[index])));
+        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMult") + HIST(detectorNames[index]), zEqMultiplicity[CentralityDetectors::NTracksGlobal], hCalibrations[index]->GetBinContent(hCalibrations[index]->FindBin(zEqMultiplicity[index])));
       });
     }
 
-    double summedMult = reweightedCentr[CentralityDetectors::FV0A] + reweightedCentr[CentralityDetectors::FT0A] + reweightedCentr[CentralityDetectors::FT0C] + reweightedCentr[CentralityDetectors::FDDA];
-    double totalWeights = weigthsOfCurrentColl[CentralityDetectors::FV0A] + weigthsOfCurrentColl[CentralityDetectors::FT0A] + weigthsOfCurrentColl[CentralityDetectors::FT0C] + weigthsOfCurrentColl[CentralityDetectors::FDDA];
-    double combinedMult = summedMult / totalWeights;
-    double combinedMultPercentile = hCalibrations[CentralityDetectors::kNDetectors]->GetBinContent(hCalibrations[CentralityDetectors::kNDetectors]->FindBin(combinedMult));
+    computeCombinedMultiplicity(coll, reweightedMultiplicity, zEqMultiplicity, weigthsOfCurrentColl, produceDistributionsWithPercentiles);
 
-    if (summedMult > 0) {
-
-      if (produceDistributionsWithPercentiles) {
-        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC"), coll.multNTracksPVeta1(), combinedMultPercentile);
-        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC"), coll.multNTracksGlobal(), combinedMultPercentile);
-      }
-
-      histos.fill(HIST("MultDistributions/Reweighted/hMultCombinedNoFDDC"), combinedMult);
-      histos.fill(HIST("MultVsNTracksPV/hMultCombinedNoFDDCVsNTPV"), coll.multNTracksPVeta1(), combinedMult);
-      histos.fill(HIST("MultsVsGlobalTracks/hMultCombinedNoFDDCVsGlobal"), coll.multNTracksGlobal(), combinedMult);
-    }
-
-    summedMult += zEqCentrality[CentralityDetectors::FDDC] * weigthsOfCurrentColl[CentralityDetectors::FDDC];
-    totalWeights += weigthsOfCurrentColl[CentralityDetectors::FDDC];
-    combinedMult = summedMult / totalWeights;
-
-    if (summedMult > 0) {
-
-      if (produceDistributionsWithPercentiles) {
-        histos.fill(HIST("MultDistributionsCalibratedVsNTracksPV/hMultCombined"), coll.multNTracksPVeta1(), combinedMultPercentile);
-        histos.fill(HIST("MultDistributionsCalibratedVsGlobal/hMultCombined"), coll.multNTracksGlobal(), combinedMultPercentile);
-      }
-
-      histos.fill(HIST("MultDistributions/Reweighted/hMultCombined"), combinedMult);
-      histos.fill(HIST("MultVsNTracksPV/hMultCombinedVsNTPV"), coll.multNTracksPVeta1(), combinedMult);
-      histos.fill(HIST("MultsVsGlobalTracks/hMultCombinedVsGlobal"), coll.multNTracksGlobal(), combinedMult);
-    }
-
-    static_for<0, CentralityDetectors::kNDetectors - 1>([&](auto i) {
-      constexpr int index = i.value;
-      histos.fill(HIST("MultVsNTracksPV/hMult") + HIST(detectorNames[index]) + HIST("VsNTPV"), coll.multNTracksPVeta1(), zEqCentrality[index]);
-      histos.fill(HIST("MultsVsGlobalTracks/hMult") + HIST(detectorNames[index]) + HIST("VsGlobal"), coll.multNTracksGlobal(), zEqCentrality[index]);
-    });
-
-    if (combinedMult > 4) {
-      LOGP(warning, "Mult: {}, zPv: {}, FT0A: {}, FT0C: {}, FDDA: {}, FDDC: {}, NTPV: {}, NTracksGlobal: {}",
-           combinedMult, zPV, coll.multFT0A(), coll.multFT0C(), coll.multFDDA(), coll.multFDDC(), coll.multNTracksPVeta1(), coll.multNTracksGlobal());
-    }
   }
   PROCESS_SWITCH(multiplicityCombination, process, "main process function", true);
 };
