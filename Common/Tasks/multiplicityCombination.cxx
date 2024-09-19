@@ -63,6 +63,7 @@ struct multiplicityCombination {
   ConfigurableAxis binsMultNTracksGlobal{"binsMultNTracksGlobal", {60, 0., 60}, "bins for NTracksGlobal multiplicity"};
   ConfigurableAxis binsMultCombined{"binsMultCombined", {500, 0., 40}, "bins for Combined multiplicity"};
   ConfigurableAxis binsMultZEq{"binsMultZEq", {500, 0., 1}, "bins for Z equalized multiplicity"};
+  ConfigurableAxis binsGenerated{"binsGenerated", {500, 0., 200}, "bins for Z equalized multiplicity"};
   ConfigurableAxis binsZVtx{"binsZVtx", {200, -25, 25}, "bins for z vertex"};
 
   HistogramRegistry histos{"Histos", {}, OutputObjHandlingPolicy::AnalysisObject};
@@ -170,10 +171,21 @@ struct multiplicityCombination {
       }
       hCalibrations[CentralityDetectors::kNDetectors] = (TH1F*)(calibFile->Get("hCalibCombined"));
       calibFile->Close();
-      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100}});
-      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100}});
+      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100, "Combined multiplicity (no FDDC) percentile"}});
+      histos.add<TH2>("MultDistributionsCalibratedVsNTracksPV/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{PV}"}, {100, 0, 100, "Combined multiplicity (no FDDC) percentile"}});
+      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombined", "hMultCombined", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100, "Combined multiplicity percentile"}});
+      histos.add<TH2>("MultDistributionsCalibratedVsGlobal/hMultCombinedNoFDDC", "hMultCombinedNoFDDC", kTH2F, {{binsMultZEq, "N_{tracks}^{global}"}, {100, 0, 100, "Combined multiplicity percentile"}});
+    }
+
+    if (doprocessMC) {
+      for (int i = 0; i < CentralityDetectors::kNDetectors; i++) {
+        histos.add<TH2>(("MultVsGenerated/hMult" + detectorNames[i] + "VsGenerated").c_str(), ("hMult" + detectorNames[i] + "VsGenerated").c_str(), kTH2F, {{binsGenerated, "Generated multiplicity"}, {binsMultZEq, (detectorNames[i]+" multiplicity").c_str()}});
+        histos.add<TH2>(("MultDistributionsCalibratedVsGenerated/hMult" + detectorNames[i] + "VsGenerated").c_str(), ("hMult" + detectorNames[i] + "VsGenerated").c_str(), kTH2F, {{binsGenerated, "Generated multiplicity"}, {100, 0, 100}});
+      }
+      histos.add<TH2>("MultVsGenerated/hMultCombinedVsGenerated", "hMultCombinedVsGenerated", kTH2D, {{binsGenerated, "Generated multiplicity"}, axisMultCombined});
+      histos.add<TH2>("MultVsGenerated/hMultCombinedNoFDDCVsGenerated", "hMultCombinedNoFDDCVsGenerated", kTH2D, {{binsGenerated, "Generated multiplicity"}, axisMultCombined});
+      histos.add<TH2>(("MultDistributionsCalibratedVsGenerated/hMultCombinedVsGenerated").c_str(), ("hMultCombinedVsGenerated").c_str(), kTH2F, {{binsGenerated, "Generated multiplicity"}, {100, 0, 100}});
+      histos.add<TH2>(("MultDistributionsCalibratedVsGenerated/hMultCombinedNoFDDCVsGenerated").c_str(), ("hMultCombinedNoFDDCVsGenerated").c_str(), kTH2F, {{binsGenerated, "Generated multiplicity"}, {100, 0, 100}});
     }
   }
 
@@ -288,7 +300,8 @@ struct multiplicityCombination {
     }
   }
 
-  void process(JoinedMults::iterator const& coll)
+  template <bool isMc>
+  void run(JoinedMults::iterator const& coll)
   {
     float zPV = coll.multPVz();
 
@@ -323,8 +336,21 @@ struct multiplicityCombination {
 
     computeCombinedMultiplicity(coll, reweightedMultiplicity, zEqMultiplicity, weigthsOfCurrentColl, produceDistributionsWithPercentiles);
 
+    //if constexpr (isMc) {
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCFT0A") + HIST("VsNTPV"), zPV, coll.multMCFT0A());
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCFT0C") + HIST("VsNTPV"), zPV, coll.multMCFT0C());
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCNParticlesEta10") + HIST("VsNTPV"), zPV, coll.multMCNParticlesEta10());
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCNParticlesEta08") + HIST("VsNTPV"), zPV, coll.multMCNParticlesEta08());
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCNParticlesEta05") + HIST("VsNTPV"), zPV, coll.multMCNParticlesEta05());
+    //  histos.fill(HIST("MultVsNTracksPV/hMultMCPVz") + HIST("VsNTPV"), zPV, coll.multMCPVz());
+    //}
   }
-  PROCESS_SWITCH(multiplicityCombination, process, "main process function", true);
+
+  void process(JoinedMults::iterator const& coll)
+  {
+    run<false>(coll);
+  }
+  //PROCESS_SWITCH(multiplicityCombination, process, "main process function", true);
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
