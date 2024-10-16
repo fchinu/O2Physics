@@ -10,7 +10,7 @@
         "end-value-enumeration": "-1",
         "step-value-enumeration": "1",
         "aod-parent-access-level": "1",
-        "aod-parent-base-path-replacement": "old-path-to-parent;new-path-to-parent"
+        "aod-parent-base-path-replacement": "/home/ldellost/HFO2_tutorial/newDir/;"
     },
     "internal-dpl-aod-spawner": "",
     "bc-converter": "",
@@ -384,6 +384,7 @@
         "ptPidTpcMax": "10",
         "nSigmaTpc": "3",
         "cpaMin": "0.98",
+        "decayLengthMin": "0.01",
         "massWindow": "0.4"
     },
     "hf-task-mini-d0": {

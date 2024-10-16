@@ -139,6 +139,7 @@ struct HfTaskMiniCandidateSelectorD0 {
   Configurable<float> nSigmaTpc{"nSigmaTpc", 3., "Nsigma cut on TPC only"};
   // topological cuts
   Configurable<float> cpaMin{"cpaMin", 0.98, "Min. cosine of pointing angle"};
+  Configurable<float> decayLengthMin{"decayLengthMin", 0.01, "Min. decay lenght"};
   Configurable<float> massWindow{"massWindow", 0.4, "Half-width of the invariant-mass window"};
 
   HfHelper hfHelper;
@@ -168,6 +169,10 @@ struct HfTaskMiniCandidateSelectorD0 {
     }
     // cosine of pointing angle
     if (candidate.cpa() < cpaMin) {
+      return false;
+    }
+    // decay lenght
+    if (candidate.decayLength() < decayLengthMin) {
       return false;
     }
     return true;
@@ -279,7 +284,7 @@ struct HfTaskMiniD0 {
 
   HfHelper hfHelper;
 
-  Partition<soa::Join<aod::HfTCand2Prong, aod::HfTSelD0>> selectedD0Candidates = aod::hf_selcandidate_d0::isSelD0 >= selectionFlagD0 || aod::hf_selcandidate_d0::isSelD0bar >= selectionFlagD0bar;
+  Filter selectCands = aod::hf_selcandidate_d0::isSelD0 >= selectionFlagD0 || aod::hf_selcandidate_d0::isSelD0bar >= selectionFlagD0bar;
 
   HistogramRegistry registry{
     "registry",
@@ -290,13 +295,24 @@ struct HfTaskMiniD0 {
     const TString strTitle = "D^{0} candidates";
     const TString strPt = "#it{p}_{T} (GeV/#it{c})";
     const TString strEntries = "entries";
-    registry.add("hPtCand", strTitle + ";" + strPt + ";" + strEntries, {HistType::kTH1F, {{100, 0., 10.}}});
+    AxisSpec ptAxis = {100, 0., 10.};
+    registry.add("hCollisions", strTitle + ";" + ";" + strEntries, {HistType::kTH1F, {{1, -0.5, 0.5}}});
+    registry.add("hTracksPerCollisions", strTitle + ";" + "Tracks" + ";" + strEntries, {HistType::kTH1F, {{200, -0.5, 199.5}}});
+    registry.add("hCandsPerCollisions", strTitle + ";" + "Candidates" + ";" + strEntries, {HistType::kTH1F, {{5, -0.5, 4.5}}});
+    registry.add("hPtCand", strTitle + ";" + strPt + ";" + strEntries, {HistType::kTH1F, {ptAxis}});
     registry.add("hMass", strTitle + ";" + "inv. mass (#pi K) (GeV/#it{c}^{2})" + ";" + strEntries, {HistType::kTH1F, {{500, 0., 5.}}});
-    registry.add("hCpaVsPtCand", strTitle + ";" + "cosine of pointing angle" + ";" + strPt + ";" + strEntries, {HistType::kTH2F, {{110, -1.1, 1.1}, {100, 0., 10.}}});
+    registry.add("hCpaVsPtCand", strTitle + ";" + "cosine of pointing angle" + ";" + strPt + ";" + strEntries, {HistType::kTH2F, {{110, -1.1, 1.1}, ptAxis}});
+    registry.add("hDecayLengthVsPtCand", strTitle + ";" + "Decay Length" + ";" + strPt + ";" + strEntries, {HistType::kTH2F, {{100, 0., 1.}, ptAxis}});
+    registry.add("hDecayLengthXYVsPtCand", strTitle + ";" + "Decay Length XY" + ";" + strPt + ";" + strEntries, {HistType::kTH2F, {{100, 0., 1.}, ptAxis}});
   }
 
-  void process(soa::Join<aod::HfTCand2Prong, aod::HfTSelD0> const& /*candidates*/)
+  void process(aod::Collision const& collision,
+               aod::Tracks const& tracks,
+               soa::Filtered<soa::Join<aod::HfTCand2Prong, aod::HfTSelD0>> const& selectedD0Candidates)
   {
+    registry.fill(HIST("hCollisions"), 0);
+    registry.fill(HIST("hTracksPerCollisions"), tracks.size());
+    registry.fill(HIST("hCandsPerCollisions"), selectedD0Candidates.size());
     for (const auto& candidate : selectedD0Candidates) {
       if (candidate.isSelD0() >= selectionFlagD0) {
         registry.fill(HIST("hMass"), hfHelper.invMassD0ToPiK(candidate));
@@ -306,6 +322,8 @@ struct HfTaskMiniD0 {
       }
       registry.fill(HIST("hPtCand"), candidate.pt());
       registry.fill(HIST("hCpaVsPtCand"), candidate.cpa(), candidate.pt());
+      registry.fill(HIST("hDecayLengthVsPtCand"), candidate.decayLength(), candidate.pt());
+      registry.fill(HIST("hDecayLengthXYVsPtCand"), candidate.decayLengthXY(), candidate.pt());
     }
   }
 };
