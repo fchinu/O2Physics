@@ -69,7 +69,6 @@ struct pidStudies {
                aod::McParticles const& particles,
                soa::Join<aod::BCs, aod::Timestamps> const&)
   {
-
   }
 };
 
