@@ -307,9 +307,9 @@ struct HfPidStudies {
   }
 
   void processV0Mc(V0sMcRec const& V0s,
-                 aod::V0MCCores const&,
-                 CollSels const&,
-                 PidTracks const&)
+                   aod::V0MCCores const&,
+                   CollSels const&,
+                   PidTracks const&)
   {
     for (const auto& v0 : V0s) {
       if (isSelectedV0AsK0s(v0) || isSelectedV0AsLambda(v0)) {
