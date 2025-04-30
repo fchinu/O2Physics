@@ -18,6 +18,7 @@
 /// \author Luca Aglietta <luca.aglietta@unito.it>, Università and INFN Torino
 
 #include <string>
+#include <memory>
 
 #include "TPDGCode.h"
 
@@ -195,6 +196,15 @@ struct HfTaskPidStudies {
     ccdb->setCaching(true);
     ccdb->setLocalObjectValidityChecking();
     hfEvSel.addHistograms(registry);
+    std::shared_ptr<TH1> hTrackSel = registry.add<TH1>("hTrackSel", "Track selection;;Counts", {HistType::kTH1F, {{6, 0, 6}}});
+
+    // Set Labels for hTrackSel
+    hTrackSel->GetXaxis()->SetBinLabel(1, "All");
+    hTrackSel->GetXaxis()->SetBinLabel(2, "TPC NCls/CrossedRows");
+    hTrackSel->GetXaxis()->SetBinLabel(3, "#eta");
+    hTrackSel->GetXaxis()->SetBinLabel(4, "#it{p}_{T}");
+    hTrackSel->GetXaxis()->SetBinLabel(5, "TPC #chi^{2}/NCls");
+    hTrackSel->GetXaxis()->SetBinLabel(6, "ITS #chi^{2}/NCls");
   }
 
   template <bool isV0, typename Coll, typename Cand>
@@ -305,6 +315,7 @@ struct HfTaskPidStudies {
   template <typename Coll>
   bool isCollSelected(const Coll& coll)
   {
+    LOG(info) << "Event selection";
     float cent{-1.f};
     const auto rejectionMask = hfEvSel.getHfCollisionRejectionMask<true, o2::hf_centrality::CentralityEstimator::None, aod::BCsWithTimestamps>(coll, cent, ccdb, registry);
     /// monitor the satisfied event selections
@@ -317,38 +328,49 @@ struct HfTaskPidStudies {
   {
     const auto& posTrack = candidate.template posTrack_as<PidTracks>();
     const auto& negTrack = candidate.template negTrack_as<PidTracks>();
-    if (posTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows || negTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows) {
-      return false;
-    }
-    if (std::abs(posTrack.eta()) > o2::aod::pid_studies::maxEta || std::abs(negTrack.eta()) > o2::aod::pid_studies::maxEta) {
-      return false;
-    }
-    if (posTrack.pt() < o2::aod::pid_studies::minPt || negTrack.pt() < o2::aod::pid_studies::minPt) {
-      return false;
-    }
-    if (posTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl || negTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl) {
-      return false;
-    }
-    if (posTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl || negTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl) {
-      return false;
-    }
-    if constexpr (!isV0) {
+    if constexpr (isV0) {
+      if (posTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows || negTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows) {
+        return false;
+      }
+      registry.fill(HIST("hTrackSel"), 1);
+      if (std::abs(posTrack.eta()) > o2::aod::pid_studies::maxEta || std::abs(negTrack.eta()) > o2::aod::pid_studies::maxEta) {
+        return false;
+      }
+      registry.fill(HIST("hTrackSel"), 2);
+      if (posTrack.pt() < o2::aod::pid_studies::minPt || negTrack.pt() < o2::aod::pid_studies::minPt) {
+        return false;
+      }
+      registry.fill(HIST("hTrackSel"), 3);
+      if (posTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl || negTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl) {
+        return false;
+      }
+      registry.fill(HIST("hTrackSel"), 4);
+      if (posTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl || negTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl) {
+        return false;
+      }
+      registry.fill(HIST("hTrackSel"), 5);
+    } else {
       const auto& bachTrack = candidate.template bachelor_as<PidTracks>();
-      if (bachTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows) {
+      if (posTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows || negTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows || bachTrack.tpcNClsCrossedRows() < o2::aod::pid_studies::minTpcNClsCrossedRows) {
         return false;
       }
-      if (std::abs(bachTrack.eta()) > o2::aod::pid_studies::maxEta) {
+      registry.fill(HIST("hTrackSel"), 1);
+      if (std::abs(posTrack.eta()) > o2::aod::pid_studies::maxEta || std::abs(negTrack.eta()) > o2::aod::pid_studies::maxEta || std::abs(bachTrack.eta()) > o2::aod::pid_studies::maxEta) {
         return false;
       }
-      if (bachTrack.pt() < o2::aod::pid_studies::minPt) {
+      registry.fill(HIST("hTrackSel"), 2);
+      if (posTrack.pt() < o2::aod::pid_studies::minPt || negTrack.pt() < o2::aod::pid_studies::minPt || bachTrack.pt() < o2::aod::pid_studies::minPt) {
         return false;
       }
-      if (bachTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl) {
+      registry.fill(HIST("hTrackSel"), 3);
+      if (posTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl || negTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl || bachTrack.tpcChi2NCl() > o2::aod::pid_studies::maxTpcChi2NCl) {
         return false;
       }
-      if (bachTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl) {
+      registry.fill(HIST("hTrackSel"), 4);
+      if (posTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl || negTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl || bachTrack.itsChi2NCl() > o2::aod::pid_studies::maxItsChi2NCl) {
         return false;
       }
+      registry.fill(HIST("hTrackSel"), 5);
     }
     return true;
   }
@@ -441,6 +463,7 @@ struct HfTaskPidStudies {
       if (applyEvSels && !isCollSelected(v0.collision_as<CollisionsMc>())) {
         return;
       }
+      registry.fill(HIST("hTrackSel"), 0);
       if (applyTrackSels && !isTrackSelected<true>(v0)) {
         return;
       }
@@ -463,6 +486,7 @@ struct HfTaskPidStudies {
       if (applyEvSels && !isCollSelected(v0.collision_as<CollSels>())) {
         return;
       }
+      registry.fill(HIST("hTrackSel"), 0);
       if (applyTrackSels && !isTrackSelected<true>(v0)) {
         return;
       }
