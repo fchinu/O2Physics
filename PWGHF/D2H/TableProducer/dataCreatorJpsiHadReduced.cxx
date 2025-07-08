@@ -438,7 +438,8 @@ struct HfDataCreatorJpsiHadReduced {
   }
 
   template <typename T1>
-  bool isSelectedJpsiDauPid(const T1& track) {
+  bool isSelectedJpsiDauPid(const T1& track)
+  {
     int pidPion = -1;
     int pidProton = -1;
     int pidElectron = -1;

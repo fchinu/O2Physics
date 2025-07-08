@@ -65,26 +65,26 @@ namespace hf_cand_bstojpsiphi_lite
 DECLARE_SOA_COLUMN(PtJpsi, ptJpsi, float);   //! Transverse momentum of Jpsi daughter candidate (GeV/c)
 DECLARE_SOA_COLUMN(PtBach0, ptBach0, float); //! Transverse momentum of bachelor kaon(<- phi) (GeV/c)
 DECLARE_SOA_COLUMN(PtBach1, ptBach1, float); //! Transverse momentum of bachelor kaon(<- phi) (GeV/c)
-DECLARE_SOA_COLUMN(ItsNClsJpsiDauPos, itsNClsJpsiDauPos, int);                           //! Number of clusters in ITS
-DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauPos, tpcNClsCrossedRowsJpsiDauPos, int);     //! Number of TPC crossed rows
-DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauPos, itsChi2NClJpsiDauPos, float);                   //! ITS chi2 / Number of clusters
-DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauPos, tpcChi2NClJpsiDauPos, float);                   //! TPC chi2 / Number of clusters
-DECLARE_SOA_COLUMN(AbsEtaJpsiDauPos, absEtaJpsiDauPos, float);                           //! |eta|
-DECLARE_SOA_COLUMN(ItsNClsJpsiDauNeg, itsNClsJpsiDauNeg, int);                           //! Number of clusters in ITS
-DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauNeg, tpcNClsCrossedRowsJpsiDauNeg, int);     //! Number of TPC crossed rows
-DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauNeg, itsChi2NClJpsiDauNeg, float);                   //! ITS chi2 / Number of clusters
-DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauNeg, tpcChi2NClJpsiDauNeg, float);                   //! TPC chi2 / Number of clusters
-DECLARE_SOA_COLUMN(AbsEtaJpsiDauNeg, absEtaJpsiDauNeg, float);                           //! |eta|
-DECLARE_SOA_COLUMN(ItsNClsLfTrack0, itsNClsLfTrack0, int);                       //! Number of clusters in ITS
-DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack0, tpcNClsCrossedRowsLfTrack0, int); //! Number of TPC crossed rows
-DECLARE_SOA_COLUMN(ItsChi2NClLfTrack0, itsChi2NClLfTrack0, float);               //! ITS chi2 / Number of clusters
-DECLARE_SOA_COLUMN(TpcChi2NClLfTrack0, tpcChi2NClLfTrack0, float);               //! TPC chi2 / Number of clusters
-DECLARE_SOA_COLUMN(AbsEtaLfTrack0, absEtaLfTrack0, float);                       //! |eta|
-DECLARE_SOA_COLUMN(ItsNClsLfTrack1, itsNClsLfTrack1, int);                       //! Number of clusters in ITS
-DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack1, tpcNClsCrossedRowsLfTrack1, int); //! Number of TPC crossed rows
-DECLARE_SOA_COLUMN(ItsChi2NClLfTrack1, itsChi2NClLfTrack1, float);               //! ITS chi2 / Number of clusters
-DECLARE_SOA_COLUMN(TpcChi2NClLfTrack1, tpcChi2NClLfTrack1, float);               //! TPC chi2 / Number of clusters
-DECLARE_SOA_COLUMN(AbsEtaLfTrack1, absEtaLfTrack1, float);                       //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsJpsiDauPos, itsNClsJpsiDauPos, int);                       //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauPos, tpcNClsCrossedRowsJpsiDauPos, int); //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauPos, itsChi2NClJpsiDauPos, float);               //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauPos, tpcChi2NClJpsiDauPos, float);               //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaJpsiDauPos, absEtaJpsiDauPos, float);                       //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsJpsiDauNeg, itsNClsJpsiDauNeg, int);                       //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauNeg, tpcNClsCrossedRowsJpsiDauNeg, int); //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauNeg, itsChi2NClJpsiDauNeg, float);               //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauNeg, tpcChi2NClJpsiDauNeg, float);               //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaJpsiDauNeg, absEtaJpsiDauNeg, float);                       //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsLfTrack0, itsNClsLfTrack0, int);                           //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack0, tpcNClsCrossedRowsLfTrack0, int);     //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClLfTrack0, itsChi2NClLfTrack0, float);                   //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClLfTrack0, tpcChi2NClLfTrack0, float);                   //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaLfTrack0, absEtaLfTrack0, float);                           //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsLfTrack1, itsNClsLfTrack1, int);                           //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack1, tpcNClsCrossedRowsLfTrack1, int);     //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClLfTrack1, itsChi2NClLfTrack1, float);                   //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClLfTrack1, tpcChi2NClLfTrack1, float);                   //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaLfTrack1, absEtaLfTrack1, float);                           //! |eta|
 DECLARE_SOA_COLUMN(MJpsi, mJpsi, float);                                           //! Invariant mass of Jpsi daughter candidates (GeV/c)
 DECLARE_SOA_COLUMN(MPhi, mPhi, float);                                             //! Invariant mass of phi daughter candidates (GeV/c)
 DECLARE_SOA_COLUMN(M, m, float);                                                   //! Invariant mass of candidate (GeV/c2)
@@ -498,7 +498,7 @@ struct HfTaskBsToJpsiPhiReduced {
         candKa0.itsChi2NCl(),
         candKa0.tpcChi2NCl(),
         absEta(candKa0.tgl()),
-        //candKa.absEtaBach(candKa.tgl()),
+        // candKa.absEtaBach(candKa.tgl()),
         candKa0.tpcNSigmaKa(),
         candKa0.tofNSigmaKa(),
         candKa0.tpcTofNSigmaKa(),
