@@ -65,15 +65,26 @@ namespace hf_cand_bstojpsiphi_lite
 DECLARE_SOA_COLUMN(PtJpsi, ptJpsi, float);   //! Transverse momentum of Jpsi daughter candidate (GeV/c)
 DECLARE_SOA_COLUMN(PtBach0, ptBach0, float); //! Transverse momentum of bachelor kaon(<- phi) (GeV/c)
 DECLARE_SOA_COLUMN(PtBach1, ptBach1, float); //! Transverse momentum of bachelor kaon(<- phi) (GeV/c)
-// DECLARE_SOA_COLUMN(AbsEtaBach, absEtaBach, float);                                       //! Absolute pseudorapidity of bachelor kaon
-// DECLARE_SOA_COLUMN(ItsNClsBach, itsNClsBach, int);                                       //! Number of ITS clusters of bachelor kaon
-// DECLARE_SOA_COLUMN(TpcNClsCrossedRowsBach, tpcNClsCrossedRowsBach, int);                 //! Number of TPC crossed rows of prongs of bachelor kaon
-// DECLARE_SOA_COLUMN(TpcChi2NClBach, tpcChi2NClBach, float);                               //! Maximum TPC chi2 of prongs of Jpsi-meson daughter candidate
-// DECLARE_SOA_COLUMN(PtJpsiProngMin, ptJpsiProngMin, float);                               //! Minimum pT of prongs of Jpsi daughter candidate (GeV/c)
-// DECLARE_SOA_COLUMN(AbsEtaJpsiProngMin, absEtaJpsiProngMin, float);                       //! Minimum absolute pseudorapidity of prongs of Jpsi daughter candidate
-// DECLARE_SOA_COLUMN(ItsNClsJpsiProngMin, itsNClsJpsiProngMin, int);                       //! Minimum number of ITS clusters of prongs of Jpsi daughter candidate
-// DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiProngMin, tpcNClsCrossedRowsJpsiProngMin, int); //! Minimum number of TPC crossed rows of prongs of Jpsi daughter candidate
-// DECLARE_SOA_COLUMN(TpcChi2NClJpsiProngMax, tpcChi2NClJpsiProngMax, float);               //! Maximum TPC chi2 of prongs of Jpsi daughter candidate
+DECLARE_SOA_COLUMN(ItsNClsJpsiDauPos, itsNClsJpsiDauPos, int);                           //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauPos, tpcNClsCrossedRowsJpsiDauPos, int);     //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauPos, itsChi2NClJpsiDauPos, float);                   //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauPos, tpcChi2NClJpsiDauPos, float);                   //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaJpsiDauPos, absEtaJpsiDauPos, float);                           //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsJpsiDauNeg, itsNClsJpsiDauNeg, int);                           //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsJpsiDauNeg, tpcNClsCrossedRowsJpsiDauNeg, int);     //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClJpsiDauNeg, itsChi2NClJpsiDauNeg, float);                   //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClJpsiDauNeg, tpcChi2NClJpsiDauNeg, float);                   //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaJpsiDauNeg, absEtaJpsiDauNeg, float);                           //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsLfTrack0, itsNClsLfTrack0, int);                       //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack0, tpcNClsCrossedRowsLfTrack0, int); //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClLfTrack0, itsChi2NClLfTrack0, float);               //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClLfTrack0, tpcChi2NClLfTrack0, float);               //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaLfTrack0, absEtaLfTrack0, float);                       //! |eta|
+DECLARE_SOA_COLUMN(ItsNClsLfTrack1, itsNClsLfTrack1, int);                       //! Number of clusters in ITS
+DECLARE_SOA_COLUMN(TpcNClsCrossedRowsLfTrack1, tpcNClsCrossedRowsLfTrack1, int); //! Number of TPC crossed rows
+DECLARE_SOA_COLUMN(ItsChi2NClLfTrack1, itsChi2NClLfTrack1, float);               //! ITS chi2 / Number of clusters
+DECLARE_SOA_COLUMN(TpcChi2NClLfTrack1, tpcChi2NClLfTrack1, float);               //! TPC chi2 / Number of clusters
+DECLARE_SOA_COLUMN(AbsEtaLfTrack1, absEtaLfTrack1, float);                       //! |eta|
 DECLARE_SOA_COLUMN(MJpsi, mJpsi, float);                                           //! Invariant mass of Jpsi daughter candidates (GeV/c)
 DECLARE_SOA_COLUMN(MPhi, mPhi, float);                                             //! Invariant mass of phi daughter candidates (GeV/c)
 DECLARE_SOA_COLUMN(M, m, float);                                                   //! Invariant mass of candidate (GeV/c2)
@@ -145,25 +156,33 @@ DECLARE_SOA_TABLE(HfRedCandBsLites, "AOD", "HFREDCANDBSLITE", //! Table with som
                   hf_cand_bstojpsiphi_lite::ImpactParameterJpsiDauNeg,
                   hf_cand_bstojpsiphi_lite::ImpactParameterLfTrack0,
                   hf_cand_bstojpsiphi_lite::ImpactParameterLfTrack1,
-                  // hf_cand_bstojpsiphi_lite::PtJpsiProngMin,
-                  // hf_cand_bstojpsiphi_lite::AbsEtaJpsiProngMin,
-                  // hf_cand_bstojpsiphi_lite::ItsNClsJpsiProngMin,
-                  // hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsJpsiProngMin,
-                  // hf_cand_bstojpsiphi_lite::TpcChi2NClJpsiProngMax,
+                  // Jpsi daughter features
+                  hf_cand_bstojpsiphi_lite::ItsNClsJpsiDauPos,
+                  hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsJpsiDauPos,
+                  hf_cand_bstojpsiphi_lite::ItsChi2NClJpsiDauPos,
+                  hf_cand_bstojpsiphi_lite::TpcChi2NClJpsiDauPos,
+                  hf_cand_bstojpsiphi_lite::AbsEtaJpsiDauPos,
+                  hf_cand_bstojpsiphi_lite::ItsNClsJpsiDauNeg,
+                  hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsJpsiDauNeg,
+                  hf_cand_bstojpsiphi_lite::ItsChi2NClJpsiDauNeg,
+                  hf_cand_bstojpsiphi_lite::TpcChi2NClJpsiDauNeg,
+                  hf_cand_bstojpsiphi_lite::AbsEtaJpsiDauNeg,
                   // kaon features
                   hf_cand_bstojpsiphi_lite::PtBach0,
-                  // hf_cand_bstojpsiphi_lite::AbsEtaBach0,
-                  // hf_cand_bstojpsiphi_lite::ItsNClsBach0,
-                  // hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsBach0,
-                  // hf_cand_bstojpsiphi_lite::TpcChi2NClBach0,
+                  hf_cand_bstojpsiphi_lite::ItsNClsLfTrack0,
+                  hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsLfTrack0,
+                  hf_cand_bstojpsiphi_lite::ItsChi2NClLfTrack0,
+                  hf_cand_bstojpsiphi_lite::TpcChi2NClLfTrack0,
+                  hf_cand_bstojpsiphi_lite::AbsEtaLfTrack0,
                   hf_cand_bstojpsiphi_lite::NSigTpcKaBachelor0,
                   hf_cand_bstojpsiphi_lite::NSigTofKaBachelor0,
                   hf_cand_bstojpsiphi_lite::NSigTpcTofKaBachelor0,
                   hf_cand_bstojpsiphi_lite::PtBach1,
-                  // hf_cand_bstojpsiphi_lite::AbsEtaBach1,
-                  // hf_cand_bstojpsiphi_lite::ItsNClsBach1,
-                  // hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsBach1,
-                  // hf_cand_bstojpsiphi_lite::TpcChi2NClBach1,
+                  hf_cand_bstojpsiphi_lite::ItsNClsLfTrack1,
+                  hf_cand_bstojpsiphi_lite::TpcNClsCrossedRowsLfTrack1,
+                  hf_cand_bstojpsiphi_lite::ItsChi2NClLfTrack1,
+                  hf_cand_bstojpsiphi_lite::TpcChi2NClLfTrack1,
+                  hf_cand_bstojpsiphi_lite::AbsEtaLfTrack1,
                   hf_cand_bstojpsiphi_lite::NSigTpcKaBachelor1,
                   hf_cand_bstojpsiphi_lite::NSigTofKaBachelor1,
                   hf_cand_bstojpsiphi_lite::NSigTpcTofKaBachelor1,
@@ -331,6 +350,14 @@ struct HfTaskBsToJpsiPhiReduced {
     return std::abs(etaProng) <= etaTrackMax && ptProng >= ptTrackMin;
   }
 
+  /// Calculate pseudorapidity from track tan(lambda)
+  /// \param tgl is the track tangent of the dip angle
+  /// \return pseudorapidity
+  inline float absEta(float tgl)
+  {
+    return std::abs(std::log(std::tan(o2::constants::math::PIQuarter - 0.5f * std::atan(tgl))));
+  }
+
   /// Fill candidate information at reconstruction level
   /// \param doMc is the flag to enable the filling with MC information
   /// \param withBsMl is the flag to enable the filling with ML scores for the Bs candidate
@@ -454,21 +481,33 @@ struct HfTaskBsToJpsiPhiReduced {
         candidate.impactParameter1(),
         candidate.impactParameter2(),
         candidate.impactParameter3(),
-        // candJpsi.ptProngMin(),
-        // candJpsi.absEtaProngMin(),
-        // candJpsi.itsNClsProngMin(),
-        // candJpsi.tpcNClsCrossedRowsProngMin(),
-        // candJpsi.tpcChi2NClProngMax(),
+        candJpsi.itsNClsDauPos(),
+        candJpsi.tpcNClsCrossedRowsDauPos(),
+        candJpsi.itsChi2NClDauPos(),
+        candJpsi.tpcChi2NClDauPos(),
+        absEta(candJpsi.tglDauPos()),
+        candJpsi.itsNClsDauNeg(),
+        candJpsi.tpcNClsCrossedRowsDauNeg(),
+        candJpsi.itsChi2NClDauNeg(),
+        candJpsi.tpcChi2NClDauNeg(),
+        absEta(candJpsi.tglDauNeg()),
         // kaon features
         candKa0.pt(),
-        // std::abs(RecoDecay::eta(candKa0.pVector())),
-        // candKa0.itsNCls(),
-        // candKa0.tpcNClsCrossedRows(),
-        // candKa0.tpcChi2NCl(),
+        candKa0.itsNCls(),
+        candKa0.tpcNClsCrossedRows(),
+        candKa0.itsChi2NCl(),
+        candKa0.tpcChi2NCl(),
+        absEta(candKa0.tgl()),
+        //candKa.absEtaBach(candKa.tgl()),
         candKa0.tpcNSigmaKa(),
         candKa0.tofNSigmaKa(),
         candKa0.tpcTofNSigmaKa(),
         candKa1.pt(),
+        candKa1.itsNCls(),
+        candKa1.tpcNClsCrossedRows(),
+        candKa1.itsChi2NCl(),
+        candKa1.tpcChi2NCl(),
+        absEta(candKa1.tgl()),
         candKa1.tpcNSigmaKa(),
         candKa1.tofNSigmaKa(),
         candKa1.tpcTofNSigmaKa(),
