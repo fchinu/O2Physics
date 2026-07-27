@@ -1157,16 +1157,16 @@ struct RecoDecay {
             auto mother = particlesMC.rawIteratorAt(particleMother.mothersIds().front() - particlesMC.offset());
             auto pdgParticleIMother = std::abs(mother.pdgCode()); // PDG code of the mother
             if (pdgParticleIMother <= PdgQuarkMax || (pdgParticleIMother >= PdgBosonMin && pdgParticleIMother <= PdgBosonMax)) {
-              // auto PDGPaticle = std::abs(particleMother.pdgCode());
+              auto pdgCurrentParticle = std::abs(particleMother.pdgCode()); // PDG code of the particle
               if (
-                (pdgParticle / PdgDivisorMeson == PDG_t::kBottom || // b mesons
-                 pdgParticle / PdgDivisorBaryon == PDG_t::kBottom)  // b baryons
+                (pdgCurrentParticle / PdgDivisorMeson == PDG_t::kBottom || // b mesons
+                 pdgCurrentParticle / PdgDivisorBaryon == PDG_t::kBottom)  // b baryons
               ) {
                 return OriginType::NonPrompt; // beauty
               }
               if (
-                (pdgParticle / PdgDivisorMeson == PDG_t::kCharm || // c mesons
-                 pdgParticle / PdgDivisorBaryon == PDG_t::kCharm)  // c baryons
+                (pdgCurrentParticle / PdgDivisorMeson == PDG_t::kCharm || // c mesons
+                 pdgCurrentParticle / PdgDivisorBaryon == PDG_t::kCharm)  // c baryons
               ) {
                 return OriginType::Prompt; // charm
               }
